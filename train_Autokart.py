@@ -25,10 +25,10 @@
 import signal
 import os
 import pdb
-import sys
 
 # Dataset
-from datasets.S3DIS import *
+#from datasets.testing_dataset import *
+from datasets.Autokart import *
 from torch.utils.data import DataLoader
 
 from utils.config import Config
@@ -42,17 +42,18 @@ from models.architectures import KPFCNN
 #       \******************/
 #
 
-class S3DISConfig(Config):
-    """
-    Override the parameters you want to modify for this dataset
-    """
+"""
+Override the parameters you want to modify for this dataset
+"""
+class AutokartConfig(Config):
+
 
     ####################
     # Dataset parameters
     ####################
 
     # Dataset name
-    dataset = 'S3DIS'
+    dataset = 'Autokart'
 
     # Number of classes in the dataset (This value is overwritten by dataset class when Initializating dataset).
     num_classes = None
@@ -61,51 +62,27 @@ class S3DISConfig(Config):
     dataset_task = ''
 
     # Number of CPU threads for the input pipeline
-    input_threads = 10
+    input_threads = 0
 
     #########################
     # Architecture definition
     #########################
 
-    # # Define layers
-    #architecture = ['simple',
-    #                'resnetb',
-    #                'resnetb_strided',
-    #                'resnetb',
-    #                'resnetb',
-    #                'resnetb_strided',
-    #                'resnetb',
-    #                'resnetb',
-    #                'resnetb_strided',
-    #                'resnetb_deformable',
-    #                'resnetb_deformable',
-    #                'resnetb_deformable_strided',
-    #                'resnetb_deformable',
-    #                'resnetb_deformable',
-    #                'nearest_upsample',
-    #                'unary',
-    #                'nearest_upsample',
-    #                'unary',
-    #                'nearest_upsample',
-    #                'unary',
-    #                'nearest_upsample',
-    #                'unary']
-
-    # Define layers
+    # Define layers for when use_potentials = True
     architecture = ['simple',
                     'resnetb',
                     'resnetb_strided',
                     'resnetb',
                     'resnetb',
                     'resnetb_strided',
-                    'resnetb',
-                    'resnetb',
-                    'resnetb_strided',
-                    'resnetb',
-                    'resnetb',
-                    'resnetb_strided',
-                    'resnetb',
-                    'resnetb',
+                    'resnetb_deformable',
+                    'resnetb_deformable',
+                    'resnetb_deformable_strided',
+                    'resnetb_deformable',
+                    'resnetb_deformable',
+                    'resnetb_deformable_strided',
+                    'resnetb_deformable',
+                    'resnetb_deformable',
                     'nearest_upsample',
                     'unary',
                     'nearest_upsample',
@@ -115,24 +92,49 @@ class S3DISConfig(Config):
                     'nearest_upsample',
                     'unary']
 
+    # Define layers for when use_potentials = False
+    #architecture = ['simple',
+    #                'resnetb',
+    #                'resnetb_strided',
+    #                'resnetb',
+    #                'resnetb',
+    #                'resnetb_strided',
+    #                'resnetb',
+    #                'resnetb',
+    #                'resnetb_strided',
+    #                'resnetb',
+    #                'resnetb',
+    #                'resnetb_strided',
+    #                'resnetb',
+    #                'resnetb',
+    #                'nearest_upsample',
+    #                'unary',
+    #                'nearest_upsample',
+    #                'unary',
+    #                'nearest_upsample',
+    #                'unary',
+    #                'nearest_upsample',
+    #                'unary']
+
+
     ###################
     # KPConv parameters
     ###################
 
+    # Size of the first subsampling grid in meter
+    first_subsampling_dl = 7  ## Shouldn't be lower than the minimum point spacing in your dataset.
+
+    # Radius of the input sphere
+    in_radius = first_subsampling_dl*50   ## Denne bør være 50 ganger større enn first_subsampling_dl
+
     # Number of kernel points
     num_kernel_points = 15
-
-    # Radius of the input sphere (decrease value to reduce memory cost)
-    in_radius = 1.2
-
-    # Size of the first subsampling grid in meter (increase value to reduce memory cost)
-    first_subsampling_dl = 0.03
 
     # Radius of convolution in "number grid cell". (2.5 is the standard value)
     conv_radius = 2.5
 
     # Radius of deformable convolution in "number grid cell". Larger so that deformed kernel can spread out
-    deform_radius = 5.0
+    deform_radius = 6.0
 
     # Radius of the area of influence of each kernel point in "number grid cell". (1.0 is the standard value)
     KP_extent = 1.2
@@ -145,7 +147,7 @@ class S3DISConfig(Config):
 
     # Choice of input features
     first_features_dim = 128
-    in_features_dim = 5
+    in_features_dim = 2   ## 1 + the number of features available for your data points. (for example, colors=3, intensity=1)
 
     # Can the network learn modulations
     modulated = False
@@ -175,7 +177,7 @@ class S3DISConfig(Config):
     lr_decays = {i: 0.1 ** (1 / 150) for i in range(1, max_epoch)}
     grad_clip_norm = 100.0
 
-    # Number of batch (decrease to reduce memory cost, but it should remain > 3 for stability)
+    # Number of batch
     batch_num = 6
 
     # Number of steps per epochs
@@ -188,13 +190,13 @@ class S3DISConfig(Config):
     checkpoint_gap = 50
 
     # Augmentations
-    augment_scale_anisotropic = True
-    augment_symmetries = [True, False, False]
+    augment_scale_anisotropic = False # True
+    augment_symmetries =  [False, False, False]# [True, False, False]
     augment_rotation = 'vertical'
-    augment_scale_min = 0.9
-    augment_scale_max = 1.1
+    augment_scale_min = 1 # 0.8
+    augment_scale_max = 1 # 1.2
     augment_noise = 0.001
-    augment_color = 0.8
+    #augment_color = 0.8
 
     # The way we balance segmentation loss
     #   > 'none': Each point in the whole batch has the same contribution.
@@ -214,7 +216,6 @@ class S3DISConfig(Config):
 #
 
 if __name__ == '__main__':
-
     ############################
     # Initialize the environment
     ############################
@@ -224,6 +225,7 @@ if __name__ == '__main__':
 
     # Set GPU visible device
     os.environ['CUDA_VISIBLE_DEVICES'] = GPU_ID
+
 
     ###############
     # Previous chkp
@@ -260,7 +262,7 @@ if __name__ == '__main__':
     print('****************')
 
     # Initialize configuration class
-    config = S3DISConfig()
+    config = AutokartConfig()
     if previous_training_path:
         config.load(os.path.join('results', previous_training_path))
         config.saving_path = None
@@ -270,31 +272,35 @@ if __name__ == '__main__':
         config.saving_path = sys.argv[1]
 
     # Initialize datasets
-    training_dataset = S3DISDataset(config, set='training', use_potentials=False)
-    test_dataset = S3DISDataset(config, set='validation', use_potentials=False)
+
+    torch.cuda.empty_cache()
+    training_dataset = AutokartDataset(config, set='training', use_potentials=True)
+    val_dataset = AutokartDataset(config, set='validation', use_potentials=True)
+
 
     # Initialize samplers
-    training_sampler = S3DISSampler(training_dataset)
-    test_sampler = S3DISSampler(test_dataset)
+    training_sampler = AutokartSampler(training_dataset)
+    val_sampler = AutokartSampler(val_dataset)
 
     # Initialize the dataloader
     training_loader = DataLoader(training_dataset,
                                  batch_size=1,
                                  sampler=training_sampler,
-                                 collate_fn=S3DISCollate,
+                                 collate_fn=AutokartCollate,
                                  num_workers=config.input_threads,
                                  pin_memory=True)
-    test_loader = DataLoader(test_dataset,
+    val_loader = DataLoader(val_dataset,
                              batch_size=1,
-                             sampler=test_sampler,
-                             collate_fn=S3DISCollate,
+                             sampler=val_sampler,
+                             collate_fn=AutokartCollate,
                              num_workers=config.input_threads,
                              pin_memory=True)
+
 
     # Calibrate samplers
     #pdb.set_trace()
     training_sampler.calibration(training_loader, verbose=True)
-    test_sampler.calibration(test_loader, verbose=True)
+    val_sampler.calibration(val_loader, verbose=True)
 
     # Optional debug functions
     # debug_timing(training_dataset, training_loader)
@@ -328,7 +334,7 @@ if __name__ == '__main__':
     print('**************')
 
     # Training
-    trainer.train(net, training_loader, test_loader, config)
+    trainer.train(net, training_loader, val_loader, config)
 
     print('Forcing exit now')
     os.kill(os.getpid(), signal.SIGINT)

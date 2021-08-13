@@ -426,8 +426,8 @@ class ModelTrainer:
         softmax = torch.nn.Softmax(1)
 
         # Do not validate if dataset has no validation cloud
-        if val_loader.dataset.validation_split not in val_loader.dataset.all_splits:
-            return
+        #if val_loader.dataset.validation_split not in val_loader.dataset.all_splits:
+        #    return
 
         # Number of classes including ignored labels
         nc_tot = val_loader.dataset.num_classes
@@ -519,7 +519,6 @@ class ModelTrainer:
                                      1000 * (mean_dt[1])))
 
         t2 = time.time()
-
         # Confusions for our subparts of validation set
         Confs = np.zeros((len(predictions), nc_tot, nc_tot), dtype=np.int32)
         for i, (probs, truth) in enumerate(zip(predictions, targets)):
@@ -531,7 +530,6 @@ class ModelTrainer:
 
             # Predicted labels
             preds = val_loader.dataset.label_values[np.argmax(probs, axis=1)]
-
             # Confusions
             Confs[i, :, :] = fast_confusion(truth, preds, val_loader.dataset.label_values).astype(np.int32)
 
@@ -896,38 +894,3 @@ class ModelTrainer:
             print('\n************************\n')
 
         return
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

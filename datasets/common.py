@@ -74,8 +74,7 @@ def grid_subsampling(points, features=None, labels=None, sampleDl=0.1, verbose=0
                                          verbose=verbose)
 
 
-def batch_grid_subsampling(points, batches_len, features=None, labels=None,
-                           sampleDl=0.1, max_p=0, verbose=0, random_grid_orient=True):
+def batch_grid_subsampling(points, batches_len, features=None, labels=None, sampleDl=0.1, max_p=0, verbose=0, random_grid_orient=True):
     """
     CPP wrapper for a grid subsampling (method = barycenter for points and features)
     :param points: (N, 3) matrix of input points
@@ -290,7 +289,7 @@ class PointCloudDataset(Dataset):
         if self.config.augment_scale_anisotropic:
             scale = np.random.rand(points.shape[1]) * (max_s - min_s) + min_s
         else:
-            scale = np.random.rand() * (max_s - min_s) + min_s
+            scale = np.random.rand() * (max_s - min_s) - min_s
 
         # Add random symmetries to the scale factor
         symmetries = np.array(self.config.augment_symmetries).astype(np.int32)
@@ -573,14 +572,5 @@ class PointCloudDataset(Dataset):
         return li
 
 
-
-
-
-
-
-
-
-
-
-
-
+def my_func(x):
+    return x*x

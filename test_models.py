@@ -32,6 +32,7 @@ import torch
 from datasets.ModelNet40 import *
 from datasets.S3DIS import *
 from datasets.SemanticKitti import *
+from datasets.Autokart import *
 from torch.utils.data import DataLoader
 
 from utils.config import Config
@@ -52,7 +53,7 @@ def model_choice(chosen_log):
     ###########################
 
     # Automatically retrieve the last trained model
-    if chosen_log in ['last_ModelNet40', 'last_ShapeNetPart', 'last_S3DIS']:
+    if chosen_log in ['last_ModelNet40', 'last_ShapeNetPart', 'last_S3DIS', 'last_Autokart']:
 
         # Dataset name
         test_dataset = '_'.join(chosen_log.split('_')[1:])
@@ -68,7 +69,7 @@ def model_choice(chosen_log):
                 chosen_log = log
                 break
 
-        if chosen_log in ['last_ModelNet40', 'last_ShapeNetPart', 'last_S3DIS']:
+        if chosen_log in ['last_ModelNet40', 'last_ShapeNetPart', 'last_S3DIS', 'last_Autokart']:
             raise ValueError('No log of the dataset "' + test_dataset + '" found')
 
     # Check if log exists
@@ -174,6 +175,10 @@ if __name__ == '__main__':
         test_dataset = SemanticKittiDataset(config, set=set, balance_classes=False)
         test_sampler = SemanticKittiSampler(test_dataset)
         collate_fn = SemanticKittiCollate
+    elif config.dataset == 'Autokart':
+        test_dataset = AutokartDataset(config, set=set, balance_classes=False)
+        test_sampler = AutokartSampler(test_dataset)
+        collate_fn = AutokartCollate
     else:
         raise ValueError('Unsupported dataset : ' + config.dataset)
 
